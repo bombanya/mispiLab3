@@ -1,0 +1,84 @@
+<?xml version="1.0"?>
+<project name="web3" default="build" xmlns:ivy="antlib:org.apache.ivy.ant">
+    <property file="build.properties"/>
+
+    <target name="native2ascii">
+        <native2ascii encoding="${localization.encoding}" src="${localization.files.path}"
+                      dest="${build.dir}/resources" ext=".properties" includes="*Resources*.*"/>
+        <copy todir="${build.dir}/test">
+            <fileset dir="${build.dir}/resources"/>
+        </copy>
+    </target>
+
+    <target name="alt">
+        <copy todir="tmp">
+            <fileset dir="${code.root}"/>
+        </copy>
+
+        <replace dir="${code.root}" token="localizationBean" value="${localizationBean.alt}" summary="yes"/>
+    </target>
+
+    <target name="test" depends="build">
+        <ivy:cachepath pathid="junit.path" conf="test"/>
+        <mkdir dir="${build.dir}/test"/>
+        <javac destdir="${build.dir}/test" includeAntRuntime="false" encoding="UTF-8">
+            <src path="${test.path}"/>
+            <classpath>
+                <pathelement location="${build.dir}/classes"/>
+                <path refid="junit.path"/>
+            </classpath>
+        </javac>
+
+        <junit printsummary="true" haltonfailure="yes">
+            <classpath>
+                <pathelement location="${build.dir}/classes"/>
+                <pathelement location="${build.dir}/test"/>
+                <path refid="junit.path"/>
+            </classpath>
+
+            <test name="${test.name}" outfile="testResults" todir="${build.dir}/test">
+                <formatter type="xml"/>
+            </test>
+        </junit>
+    </target>
+
+    <target name="build" depends="compile,native2ascii">
+        <ivy:retrieve pattern="${build.dir}/tmp/[conf]/[artifact]-[revision].[ext]"/>
+        <war destfile="${build.dir}/${war.name}" webxml="${web.xml.path}/web.xml">
+            <fileset dir="${web.content.path}">
+                <include name="*.*"/>
+            </fileset>
+            <classes dir="${build.dir}/classes"/>
+            <classes dir="${resources.path}">
+                <include name="${resources.dir}/*"/>
+            </classes>
+            <classes dir="${build.dir}/resources"/>
+            <lib dir="${build.dir}/tmp/build"/>
+        </war>
+        <delete dir="${build.dir}/tmp"/>
+    </target>
+
+    <target name="compile" depends="clean">
+        <ivy:cachepath pathid="lib.path" conf="compile,build"/>
+        <mkdir dir="${build.dir}/classes"/>
+        <javac destdir="${build.dir}/classes" includeAntRuntime="false" encoding="UTF-8">
+            <src path="${src.dir}"/>
+            <classpath refid="lib.path"/>
+        </javac>
+    </target>
+
+    <target name="clean" depends="target.check" if="target.exist">
+        <delete>
+            <fileset dir="${build.dir}">
+                <include name="**"/>
+                <exclude name="*.war"/>
+            </fileset>
+        </delete>
+    </target>
+
+    <target name="target.check">
+        <condition property="target.exist">
+            <available file="${build.dir}" type="dir"/>
+        </condition>
+    </target>
+</project>
