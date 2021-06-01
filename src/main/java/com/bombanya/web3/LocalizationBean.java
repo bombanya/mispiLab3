@@ -30,7 +30,6 @@ public class LocalizationBean {
     private String checkerInitMessage;
 
     public void localize(){
-        System.out.println(language + " " + country);
         Locale currentLocale = new Locale(language, country);
         ResourceBundle resourceBundle = ResourceBundle.getBundle("web3Resources", currentLocale);
         name = resourceBundle.getString("name");

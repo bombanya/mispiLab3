@@ -10,12 +10,37 @@
         </copy>
     </target>
 
+    <target name="altRollback">
+        <move todir="${code.root}">
+            <fileset dir="tmp"/>
+        </move>
+    </target>
+
     <target name="alt">
         <copy todir="tmp">
             <fileset dir="${code.root}"/>
         </copy>
 
         <replace dir="${code.root}" token="localizationBean" value="${localizationBean.alt}" summary="yes"/>
+        <replace dir="${code.root}" token="setLocalizationBean" value="${localizationBeanSetter.alt}" summary="yes"/>
+
+        <replaceregexp match="HitChecker" replace="${HitChecker.alt}" flags="g" byline="true" encoding="UTF-8">
+            <fileset dir="${code.root}"/>
+        </replaceregexp>
+        <move todir="${code.root}/main/java/com/bombanya/web3">
+            <fileset dir="${code.root}/main/java/com/bombanya/web3"/>
+            <globmapper from="HitChecker*" to="${HitChecker.alt}*"/>
+        </move>
+        <move todir="${code.root}/test/java">
+            <fileset dir="${code.root}/test/java"/>
+            <globmapper from="HitChecker*" to="${HitChecker.alt}*"/>
+        </move>
+
+        <antcall target="build"/>
+
+        <move todir="${code.root}">
+            <fileset dir="tmp"/>
+        </move>
     </target>
 
     <target name="test" depends="build">
@@ -54,6 +79,9 @@
             </classes>
             <classes dir="${build.dir}/resources"/>
             <lib dir="${build.dir}/tmp/build"/>
+            <manifest>
+                <attribute name="Manifest-Version" value="mispi"/>
+            </manifest>
         </war>
         <delete dir="${build.dir}/tmp"/>
     </target>
